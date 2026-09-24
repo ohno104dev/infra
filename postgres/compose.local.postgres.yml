@@ -1,0 +1,8 @@
+name: postgres-shard
+
+services:
+  db-1:
+    image: postgres:18
+    restart: unless-stopped
+
+    en

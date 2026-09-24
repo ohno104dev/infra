@@ -1,0 +1,163 @@
+name: redis-cluster
+services:
+  redis1:
+    image: redis:8
+    restart: unless-stopped
+    network_mode: host
+
+    command:
+      - redis-server
+
+      - --port
+      - "6379"
+
+      # enable redis cluster
+      - --cluster-enabled 
+      - "yes"
+
+      # redis-managed cluster state file
+      - --cluster-config-file 
+      - "nodes.conf"
+
+      # consider a node unavailable after 5 sec
+      - --cluster-node-timeout 
+      - "5000"
+
+      # disable AOF persistence
+      - --appendonly 
+      - "no"
+
+      # disable RDB snapshots
+      - --save 
+      - ""
+
+      # advertised address for cluster clients
+      - --cluster-announce-ip 
+      - 127.0.0.1
+      - --cluster-announce-port 
+      - "6379"
+      - --cluster-announce-bus-port 
+      - "16379"
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  redis2:
+    image: redis:8
+    restart: unless-stopped
+    network_mode: host
+
+    command:
+      - redis-server
+
+      # redis client port
+      - --port
+      - "6380"
+
+      # enable Redis Cluster
+      - --cluster-enabled
+      - "yes"
+
+      # redis-managed cluster state file
+      - --cluster-config-file
+      - nodes.conf
+
+      # consider a node unavailable after 5 seconds
+      - --cluster-node-timeout
+      - "5000"
+
+      # disable AOF persistence
+      - --appendonly
+      - "no"
+
+      # disable RDB snapshots
+      - --save
+      - ""
+
+      # Advertised address for cluster clients
+      - --cluster-announce-ip
+      - 127.0.0.1
+      - --cluster-announce-port
+      - "6380"
+      - --cluster-announce-bus-port
+      - "16380"
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6380", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  redis3:
+    image: redis:8
+    restart: unless-stopped
+    network_mode: host
+
+    command:
+      - redis-server
+
+      # redis client port
+      - --port
+      - "6381"
+
+      # enable Redis Cluster
+      - --cluster-enabled
+      - "yes"
+
+      # redis-managed cluster state file
+      - --cluster-config-file
+      - nodes.conf
+
+      # consider a node unavailable after 5 seconds
+      - --cluster-node-timeout
+      - "5000"
+
+      # disable AOF persistence
+      - --appendonly
+      - "no"
+
+      # disable RDB snapshots
+      - --save
+      - ""
+
+      # advertised address for cluster clients
+      - --cluster-announce-ip
+      - 127.0.0.1
+      - --cluster-announce-port
+      - "6381"
+      - --cluster-announce-bus-port
+      - "16381"
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6381", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  redis-cluster-init:
+    image: redis:8
+    restart: "no"
+    network_mode: host
+
+    depends_on:
+      redis1:
+        condition: service_healthy
+      redis2:
+        condition: service_healthy
+      redis3:
+        condition: service_healthy
+
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        redis-cli --cluster create \
+        127.0.0.1:6379 \
+        127.0.0.1:6380 \
+        127.0.0.1:6381 \
+        --cluster-replicas 0 \
+        --cluster-yes
+        
