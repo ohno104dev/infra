@@ -3,6 +3,46 @@ name: postgres-shard
 services:
   db-1:
     image: postgres:18
-    restart: unless-stopped
+    # restart: unless-stopped
 
-    en
+    environment:
+      # POSTGRES_DB: ${POSTGRES_DB}
+      # POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "127.0.0.1:5432:5432"
+
+    volumes:
+      - db-1-data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db-2:
+    image: postgres:18
+    # restart: unless-stopped
+
+    environment:
+      # POSTGRES_DB: ${POSTGRES_DB}
+      # POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "127.0.0.1:5433:5432"
+
+    volumes:
+      - db-2-data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-1-data:
+  db-2-data:

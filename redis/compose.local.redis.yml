@@ -2,8 +2,12 @@ name: redis-cluster
 services:
   redis1:
     image: redis:8
-    restart: unless-stopped
+    # restart: unless-stopped
     network_mode: host
+
+    environment:
+      # Used by redis-cli for authentication to avoid exposing the password in command-line arguments.
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
 
     command:
       - redis-server
@@ -11,27 +15,33 @@ services:
       - --port
       - "6379"
 
-      # enable redis cluster
+      # Authentication
+      # `requirepass` sets the password for the built-in `default` user.
+      # To use a custom username, configure Redis ACL.
+      - --requirepass
+      - ${REDIS_PASSWORD}
+
+      # Enable redis cluster
       - --cluster-enabled 
       - "yes"
 
-      # redis-managed cluster state file
+      # Redis-managed cluster state file
       - --cluster-config-file 
       - "nodes.conf"
 
-      # consider a node unavailable after 5 sec
+      # Consider a node unavailable after 5 sec
       - --cluster-node-timeout 
       - "5000"
 
-      # disable AOF persistence
+      # Disable AOF persistence
       - --appendonly 
       - "no"
 
-      # disable RDB snapshots
+      # Disable RDB snapshots
       - --save 
       - ""
 
-      # advertised address for cluster clients
+      # Advertised address for cluster clients
       - --cluster-announce-ip 
       - 127.0.0.1
       - --cluster-announce-port 
@@ -47,33 +57,42 @@ services:
 
   redis2:
     image: redis:8
-    restart: unless-stopped
+    # restart: unless-stopped
     network_mode: host
+
+    environment:
+      # Used by redis-cli for authentication to avoid exposing the password in command-line arguments.
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
 
     command:
       - redis-server
 
-      # redis client port
       - --port
       - "6380"
 
-      # enable Redis Cluster
+      # Authentication
+      # `requirepass` sets the password for the built-in `default` user.
+      # To use a custom username, configure Redis ACL.
+      - --requirepass
+      - ${REDIS_PASSWORD}
+
+      # Enable Redis Cluster
       - --cluster-enabled
       - "yes"
 
-      # redis-managed cluster state file
+      # Redis-managed cluster state file
       - --cluster-config-file
       - nodes.conf
 
-      # consider a node unavailable after 5 seconds
+      # Consider a node unavailable after 5 seconds
       - --cluster-node-timeout
       - "5000"
 
-      # disable AOF persistence
+      # Disable AOF persistence
       - --appendonly
       - "no"
 
-      # disable RDB snapshots
+      # Disable RDB snapshots
       - --save
       - ""
 
@@ -93,37 +112,46 @@ services:
 
   redis3:
     image: redis:8
-    restart: unless-stopped
+    # restart: unless-stopped
     network_mode: host
+
+    environment:
+      # Used by redis-cli for authentication to avoid exposing the password in command-line arguments.
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
 
     command:
       - redis-server
 
-      # redis client port
       - --port
       - "6381"
 
-      # enable Redis Cluster
+      # Authentication
+      # `requirepass` sets the password for the built-in `default` user.
+      # To use a custom username, configure Redis ACL.
+      - --requirepass
+      - ${REDIS_PASSWORD}
+
+      # Enable Redis Cluster
       - --cluster-enabled
       - "yes"
 
-      # redis-managed cluster state file
+      # Redis-managed cluster state file
       - --cluster-config-file
       - nodes.conf
 
-      # consider a node unavailable after 5 seconds
+      # Consider a node unavailable after 5 seconds
       - --cluster-node-timeout
       - "5000"
 
-      # disable AOF persistence
+      # Disable AOF persistence
       - --appendonly
       - "no"
 
-      # disable RDB snapshots
+      # Disable RDB snapshots
       - --save
       - ""
 
-      # advertised address for cluster clients
+      # Advertised address for cluster clients
       - --cluster-announce-ip
       - 127.0.0.1
       - --cluster-announce-port
@@ -150,14 +178,17 @@ services:
       redis3:
         condition: service_healthy
 
+    environment:
+      # Used by redis-cli for authentication to avoid exposing the password in command-line arguments.
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+
     entrypoint:
       - /bin/sh
       - -c
       - |
         redis-cli --cluster create \
-        127.0.0.1:6379 \
-        127.0.0.1:6380 \
-        127.0.0.1:6381 \
-        --cluster-replicas 0 \
-        --cluster-yes
-        
+          127.0.0.1:6379 \
+          127.0.0.1:6380 \
+          127.0.0.1:6381 \
+          --cluster-replicas 0 \
+          --cluster-yes
