@@ -1,0 +1,23 @@
+name: haproxy
+
+services:
+  haproxy:
+    image: haproxy:3.2-alpine
+    # restart: unless-stopped
+
+    environment:
+      HAPROXY_PORT: ${HAPROXY_PORT}
+      HAPROXY_STATS_PORT: ${HAPROXY_STATS_PORT}
+
+    ports:
+      - "127.0.0.1:${HAPROXY_PORT}:8080"
+      - "127.0.0.1:${HAPROXY_STATS_PORT}:8404"
+
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:${HAPROXY_STATS_PORT}/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5

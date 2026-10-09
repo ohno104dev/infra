@@ -13,7 +13,7 @@ services:
       - redis-server
 
       - --port
-      - "6379"
+      - "${REDIS1_PORT}"
 
       # Authentication
       # `requirepass` sets the password for the built-in `default` user.
@@ -45,12 +45,12 @@ services:
       - --cluster-announce-ip 
       - 127.0.0.1
       - --cluster-announce-port 
-      - "6379"
+      - "${REDIS1_PORT}"
       - --cluster-announce-bus-port 
-      - "16379"
+      - "${REDIS1_BUS_PORT}"
 
     healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      test: ["CMD", "redis-cli", "-p", "${REDIS1_PORT}", "ping"]
       interval: 2s
       timeout: 3s
       retries: 10
@@ -68,7 +68,7 @@ services:
       - redis-server
 
       - --port
-      - "6380"
+      - "${REDIS2_PORT}"
 
       # Authentication
       # `requirepass` sets the password for the built-in `default` user.
@@ -100,12 +100,12 @@ services:
       - --cluster-announce-ip
       - 127.0.0.1
       - --cluster-announce-port
-      - "6380"
+      - "${REDIS2_PORT}"
       - --cluster-announce-bus-port
-      - "16380"
+      - "${REDIS2_BUS_PORT}"
 
     healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6380", "ping"]
+      test: ["CMD", "redis-cli", "-p", "${REDIS2_PORT}", "ping"]
       interval: 2s
       timeout: 3s
       retries: 10
@@ -123,7 +123,7 @@ services:
       - redis-server
 
       - --port
-      - "6381"
+      - "${REDIS3_PORT}"
 
       # Authentication
       # `requirepass` sets the password for the built-in `default` user.
@@ -155,12 +155,12 @@ services:
       - --cluster-announce-ip
       - 127.0.0.1
       - --cluster-announce-port
-      - "6381"
+      - "${REDIS3_PORT}"
       - --cluster-announce-bus-port
-      - "16381"
+      - "${REDIS3_BUS_PORT}"
 
     healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6381", "ping"]
+      test: ["CMD", "redis-cli", "-p", "${REDIS3_PORT}", "ping"]
       interval: 2s
       timeout: 3s
       retries: 10
@@ -187,8 +187,8 @@ services:
       - -c
       - |
         redis-cli --cluster create \
-          127.0.0.1:6379 \
-          127.0.0.1:6380 \
-          127.0.0.1:6381 \
+          127.0.0.1:${REDIS1_PORT} \
+          127.0.0.1:${REDIS2_PORT} \
+          127.0.0.1:${REDIS3_PORT} \
           --cluster-replicas 0 \
           --cluster-yes

@@ -12,7 +12,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
 
     ports:
-      - "127.0.0.1:3306:3306"
+      - "127.0.0.1:${MYSQL_DB1_PORT}:3306"
 
     volumes:
       - db-1-data:/var/lib/mysql
@@ -34,7 +34,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
 
     ports:
-      - "127.0.0.1:3307:3306"
+      - "127.0.0.1:${MYSQL_DB2_PORT}:3306"
 
     volumes:
       - db-2-data:/var/lib/mysql
