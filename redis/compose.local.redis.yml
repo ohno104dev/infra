@@ -1,174 +1,147 @@
 name: redis-cluster
+
+x-redis-common: &redis-common
+  image: redis:8
+  environment:
+    REDISCLI_AUTH: "${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}"
+
 services:
   redis1:
-    image: redis:8
-    # restart: unless-stopped
-    network_mode: host
+    <<: *redis-common
 
-    environment:
-      # Used by redis-cli for authentication to avoid exposing the password in command-line arguments.
-      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    # 所有服務共用 redis1 的容器網路空間。
+    # 格式：主機 IP:主機 port:容器 port
+    ports:
+      - "127.0.0.1:${REDIS1_PORT}:${REDIS1_PORT}"
+      - "127.0.0.1:${REDIS2_PORT}:${REDIS2_PORT}"
+      - "127.0.0.1:${REDIS3_PORT}:${REDIS3_PORT}"
 
     command:
       - redis-server
-
+      - --bind
+      - "0.0.0.0"
       - --port
       - "${REDIS1_PORT}"
-
-      # Authentication
-      # `requirepass` sets the password for the built-in `default` user.
-      # To use a custom username, configure Redis ACL.
       - --requirepass
-      - ${REDIS_PASSWORD}
-
-      # Enable redis cluster
-      - --cluster-enabled 
+      - "${REDIS_PASSWORD}"
+      - --cluster-enabled
       - "yes"
-
-      # Redis-managed cluster state file
-      - --cluster-config-file 
-      - "nodes.conf"
-
-      # Consider a node unavailable after 5 sec
-      - --cluster-node-timeout 
+      - --cluster-config-file
+      - "/data/nodes.conf"
+      - --cluster-node-timeout
       - "5000"
-
-      # Disable AOF persistence
-      - --appendonly 
+      - --cluster-port
+      - "${REDIS1_BUS_PORT}"
+      - --cluster-announce-ip
+      - "127.0.0.1"
+      - --cluster-announce-port
+      - "${REDIS1_PORT}"
+      - --cluster-announce-bus-port
+      - "${REDIS1_BUS_PORT}"
+      - --appendonly
       - "no"
-
-      # Disable RDB snapshots
-      - --save 
+      - --save
       - ""
 
-      # Advertised address for cluster clients
-      - --cluster-announce-ip 
-      - 127.0.0.1
-      - --cluster-announce-port 
-      - "${REDIS1_PORT}"
-      - --cluster-announce-bus-port 
-      - "${REDIS1_BUS_PORT}"
+    volumes:
+      - redis1-data:/data
 
     healthcheck:
-      test: ["CMD", "redis-cli", "-p", "${REDIS1_PORT}", "ping"]
+      test:
+        - CMD-SHELL
+        - 'redis-cli -h 127.0.0.1 -p ${REDIS1_PORT} ping | grep -qx PONG'
       interval: 2s
       timeout: 3s
       retries: 10
 
   redis2:
-    image: redis:8
-    # restart: unless-stopped
-    network_mode: host
-
-    environment:
-      # Used by redis-cli for authentication to avoid exposing the password in command-line arguments.
-      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    <<: *redis-common
+    network_mode: "service:redis1"
 
     command:
       - redis-server
-
+      - --bind
+      - "0.0.0.0"
       - --port
       - "${REDIS2_PORT}"
-
-      # Authentication
-      # `requirepass` sets the password for the built-in `default` user.
-      # To use a custom username, configure Redis ACL.
       - --requirepass
-      - ${REDIS_PASSWORD}
-
-      # Enable Redis Cluster
+      - "${REDIS_PASSWORD}"
       - --cluster-enabled
       - "yes"
-
-      # Redis-managed cluster state file
       - --cluster-config-file
-      - nodes.conf
-
-      # Consider a node unavailable after 5 seconds
+      - "/data/nodes.conf"
       - --cluster-node-timeout
       - "5000"
-
-      # Disable AOF persistence
-      - --appendonly
-      - "no"
-
-      # Disable RDB snapshots
-      - --save
-      - ""
-
-      # Advertised address for cluster clients
+      - --cluster-port
+      - "${REDIS2_BUS_PORT}"
       - --cluster-announce-ip
-      - 127.0.0.1
+      - "127.0.0.1"
       - --cluster-announce-port
       - "${REDIS2_PORT}"
       - --cluster-announce-bus-port
       - "${REDIS2_BUS_PORT}"
+      - --appendonly
+      - "no"
+      - --save
+      - ""
+
+    volumes:
+      - redis2-data:/data
 
     healthcheck:
-      test: ["CMD", "redis-cli", "-p", "${REDIS2_PORT}", "ping"]
+      test:
+        - CMD-SHELL
+        - 'redis-cli -h 127.0.0.1 -p ${REDIS2_PORT} ping | grep -qx PONG'
       interval: 2s
       timeout: 3s
       retries: 10
 
   redis3:
-    image: redis:8
-    # restart: unless-stopped
-    network_mode: host
-
-    environment:
-      # Used by redis-cli for authentication to avoid exposing the password in command-line arguments.
-      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    <<: *redis-common
+    network_mode: "service:redis1"
 
     command:
       - redis-server
-
+      - --bind
+      - "0.0.0.0"
       - --port
       - "${REDIS3_PORT}"
-
-      # Authentication
-      # `requirepass` sets the password for the built-in `default` user.
-      # To use a custom username, configure Redis ACL.
       - --requirepass
-      - ${REDIS_PASSWORD}
-
-      # Enable Redis Cluster
+      - "${REDIS_PASSWORD}"
       - --cluster-enabled
       - "yes"
-
-      # Redis-managed cluster state file
       - --cluster-config-file
-      - nodes.conf
-
-      # Consider a node unavailable after 5 seconds
+      - "/data/nodes.conf"
       - --cluster-node-timeout
       - "5000"
-
-      # Disable AOF persistence
-      - --appendonly
-      - "no"
-
-      # Disable RDB snapshots
-      - --save
-      - ""
-
-      # Advertised address for cluster clients
+      - --cluster-port
+      - "${REDIS3_BUS_PORT}"
       - --cluster-announce-ip
-      - 127.0.0.1
+      - "127.0.0.1"
       - --cluster-announce-port
       - "${REDIS3_PORT}"
       - --cluster-announce-bus-port
       - "${REDIS3_BUS_PORT}"
+      - --appendonly
+      - "no"
+      - --save
+      - ""
+
+    volumes:
+      - redis3-data:/data
 
     healthcheck:
-      test: ["CMD", "redis-cli", "-p", "${REDIS3_PORT}", "ping"]
+      test:
+        - CMD-SHELL
+        - 'redis-cli -h 127.0.0.1 -p ${REDIS3_PORT} ping | grep -qx PONG'
       interval: 2s
       timeout: 3s
       retries: 10
 
   redis-cluster-init:
-    image: redis:8
+    <<: *redis-common
+    network_mode: "service:redis1"
     restart: "no"
-    network_mode: host
 
     depends_on:
       redis1:
@@ -178,17 +151,55 @@ services:
       redis3:
         condition: service_healthy
 
-    environment:
-      # Used by redis-cli for authentication to avoid exposing the password in command-line arguments.
-      REDISCLI_AUTH: ${REDIS_PASSWORD}
-
     entrypoint:
       - /bin/sh
-      - -c
+      - -ec
       - |
-        redis-cli --cluster create \
-          127.0.0.1:${REDIS1_PORT} \
-          127.0.0.1:${REDIS2_PORT} \
-          127.0.0.1:${REDIS3_PORT} \
-          --cluster-replicas 0 \
-          --cluster-yes
+        fresh=0
+
+        for port in ${REDIS1_PORT} ${REDIS2_PORT} ${REDIS3_PORT}; do
+          info="$$(redis-cli -h 127.0.0.1 -p "$$port" cluster info | tr -d '\r')"
+
+          if printf '%s\n' "$$info" | grep -qx 'cluster_known_nodes:1' &&
+             printf '%s\n' "$$info" | grep -qx 'cluster_slots_assigned:0'; then
+            fresh=$$((fresh + 1))
+          fi
+        done
+
+        if [ "$$fresh" -eq 3 ]; then
+          redis-cli --cluster create \
+            127.0.0.1:${REDIS1_PORT} \
+            127.0.0.1:${REDIS2_PORT} \
+            127.0.0.1:${REDIS3_PORT} \
+            --cluster-replicas 0 \
+            --cluster-yes
+        else
+          echo "Existing cluster configuration found."
+        fi
+
+        for attempt in $$(seq 1 30); do
+          ready=0
+
+          for port in ${REDIS1_PORT} ${REDIS2_PORT} ${REDIS3_PORT}; do
+            if redis-cli -h 127.0.0.1 -p "$$port" cluster info |
+               tr -d '\r' | grep -qx 'cluster_state:ok'; then
+              ready=$$((ready + 1))
+            fi
+          done
+
+          if [ "$$ready" -eq 3 ]; then
+            echo "Redis Cluster is ready."
+            exit 0
+          fi
+
+          sleep 1
+        done
+
+        echo "Cluster is not ready. Check Redis logs."
+        exit 1
+
+volumes:
+  redis1-data:
+  redis2-data:
+  redis3-data:
+  redisinsight-data:
